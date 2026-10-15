@@ -1,0 +1,19 @@
+# Kit revisions
+
+Newest first. Each entry is written as steps an agent can apply to a project on the previous revision.
+`kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
+Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
+
+## r1 (2026-10-14)
+
+The first revision: Vite+ React app with shadcn base-nova and the @soleone theme kit.
+
+1. **Toolchain: Vite+.** `vp` for dev, build, lint (oxlint), format (oxfmt) and type checks. Run `vp migrate` to switch from Vite/ESLint/Prettier. Lint and format config lives in `vite.config.ts`, not `.oxlintrc.json` or `.prettierrc`. Copy the `lint` and `fmt` blocks from `templates/web/vite.config.ts`.
+2. **Latest versions.** Dependencies use current releases, not pinned old ones and not `"latest"` as a range. Update with `vp update --latest` or `pnpm up --latest`.
+3. **shadcn base-nova on neutral**, Base UI primitives. `components.json` lists the `@soleone` registry.
+4. **Vendored code stays upstream.** `components/ui` and `components/soleone` are excluded from lint and format and must match upstream byte for byte. `kit check` verifies it; deliberate local edits are listed under `allowDrift` in `.kit.json` until they're moved out.
+5. **Custom variants are wrappers** in `components/variants/`, which may restyle primitives and import `cva`; everywhere else both are lint errors (see the `overrides` and `no-restricted-imports` in `templates/web/vite.config.ts`). To migrate, move each local edit out of `components/ui` into a wrapper there, point call sites at it, then restore the stock file with `shadcn add <item> --overwrite`.
+6. **Theming via `@soleone/theme`.** Install with `pnpm dlx shadcn@latest add @soleone/theme-picker`, import `theme.css` and `material.css` after the shadcn imports, and keep the app's choices in a small config file (`src/theme/config.ts`). Vite apps inline the theme head with `@soleone/theme-vite` (`themePlugin` in `vite.config.ts`, `virtual:theme-options` in `main.tsx`); Next apps do it in the root layout (see portfolio).
+7. **AGENTS.md** is the one agent file: what the app is, links to `spec/` and `docs/`, principles, UI rules, and "run `vp check` and `kit check`". The Vite+ block that `vp` maintains stays at the bottom.
+8. **Dead code fails the check.** knip runs in `kit check` and reports unused files, exports and dependencies. Add it with `vp add -D knip` and copy `templates/web/knip.json` (it ignores the vendored folders).
+9. **spec/** describes behavior as rule tables with `area.behavior` slugs that tests cite. Start with `spec/README.md` from the template.
