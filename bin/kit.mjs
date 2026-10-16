@@ -133,7 +133,7 @@ function checkVendored(root) {
 
   const allowed = new Set(kit?.allowDrift ?? []);
   const unique = (paths) => [...new Set(paths)];
-  const drifted = unique([...output.matchAll(/~ (\S+)\s+overwrite/g)].map((match) => match[1]));
+  const drifted = unique([...output.matchAll(/~ (\S+)\s+overwrite/g)].map((match) => match[1])).filter((path) => differsFromUpstream(root, path));
   const missing = unique([...output.matchAll(/\+ (\S+\.\w+)\s+create/g)].map((match) => match[1]));
   const failing = drifted.filter((path) => !allowed.has(path));
 
@@ -150,6 +150,21 @@ ${failing.length} file(s) differ from upstream. Either upstream moved on (update
 into a wrapper or tokens, or list the path under "allowDrift" in .kit.json. See a diff with
   pnpm dlx shadcn@latest add <item> --diff <path>`);
   return false;
+}
+
+/**
+ * Whether a file the dry run reported really differs. shadcn's dry run sometimes compares a file
+ * without its "use client" line, so the file's own diff must show more than that line.
+ */
+function differsFromUpstream(root, path) {
+  const soleone = path.match(/components\/soleone\/([^/]+)\//);
+  const item = soleone ? `@soleone/${soleone[1]}` : path.split("/").pop().replace(/\.\w+$/, "");
+  const result = spawnSync("pnpm", [...SHADCN, "add", item, "--dry-run", "--diff", path], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const text = `${result.stdout}${result.stderr}`.replace(/\x1b\[[0-9;]*m/g, "");
+  if (result.status !== 0) fail(`shadcn diff of ${path} failed:\n${text}`);
+  // Diff lines sit inside a nested box: "│ │ -removed", "│ │ +added".
+  const changed = text.split("\n").filter((line) => /^│ │ [-+]/.test(line) && !/^│ │ (---|\+\+\+) /.test(line)).map((line) => line.slice(4));
+  return changed.some((line) => !/^[-+]\s*("use client"\s*)?$/.test(line));
 }
 
 async function status() {
