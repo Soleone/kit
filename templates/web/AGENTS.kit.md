@@ -21,6 +21,7 @@ Behavior is written as rules in tables with a stable slug, `area.behavior`. Test
 ## UI
 
 - shadcn on Base UI (`base-nova`). App code uses the components in `src/components/ui`; direct `@base-ui/react` imports are lint errors.
+- Enabled native buttons and `[role="button"]` controls use the pointer cursor, set in global CSS rather than by editing vendored components.
 - `src/components/ui` and `src/components/soleone` are vendored and stay byte-for-byte upstream so they can be updated with `pnpm dlx shadcn add <item> --overwrite`. Don't edit them. `kit check` fails when they drift.
 - Style through tokens and component props, never raw colors, arbitrary values or className overrides on primitives. The lint rules in `vite.config.ts` enforce this.
 - Need a look the stock variants don't have? Wrap the primitive in `src/components/variants/` (e.g. `ToolbarButton` around `Button`, with its own `cva`) and use the wrapper. That folder is the only place allowed to restyle primitives or import `class-variance-authority`.

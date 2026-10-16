@@ -4,6 +4,21 @@ Newest first. Each entry is written as steps an agent can apply to a project on 
 `kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
 Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
 
+## r2 (2026-10-16)
+
+Enabled the pointer cursor for enabled native buttons and `[role="button"]` controls.
+
+To apply to an existing project, add this to its global stylesheet:
+
+```css
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+```
+
 ## r1 (2026-10-14)
 
 The first revision: Vite+ React app with shadcn base-nova and the @soleone theme kit.

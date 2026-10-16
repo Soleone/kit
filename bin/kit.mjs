@@ -73,6 +73,11 @@ async function create(args) {
     const at = lastImport.index + lastImport[0].length;
     return text.slice(0, at) + imports + text.slice(at);
   });
+  edit(
+    dir,
+    "src/index.css",
+    (text) => `${text}\n@layer base {\n  button:not(:disabled),\n  [role="button"]:not(:disabled) {\n    cursor: pointer;\n  }\n}\n`,
+  );
 
   step(`Applying the ${template} template`);
   copyTemplate(join(TEMPLATES, template), dir, name);
