@@ -4,6 +4,15 @@ Newest first. Each entry is written as steps an agent can apply to a project on 
 `kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
 Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
 
+## r3 (2026-10-16)
+
+Dropped the D dark/light hotkey from `@soleone/theme`. `ThemeProvider` no longer takes `hotkeyFallbacks`.
+
+To apply to an existing project:
+
+1. Update the theme kit: `pnpm dlx shadcn@latest add @soleone/theme --overwrite`.
+2. Remove `hotkeyFallbacks={...}` from `<ThemeProvider>` and delete `HOTKEY_FALLBACKS` from the theme config.
+
 ## r2 (2026-10-16)
 
 Enabled the pointer cursor for enabled native buttons and `[role="button"]` controls.
