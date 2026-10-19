@@ -4,6 +4,15 @@ Newest first. Each entry is written as steps an agent can apply to a project on 
 `kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
 Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
 
+## r4 (2026-10-19)
+
+Variant wrappers no longer default to `cva`. A plain class map plus `cn()` covers a wrapper with one state or one small set of kinds; `cva` is for several variant axes, compound variants, or classes exported for use without the component. The lint rules are unchanged: `cva` stays allowed only in `components/variants/`.
+
+To apply to an existing project:
+
+1. In `AGENTS.md`, replace the "Need a look the stock variants don't have?" bullet with the one in `templates/web/AGENTS.kit.md`.
+2. Existing wrappers that use `cva` for a single state may switch to a class map, but don't need to.
+
 ## r3 (2026-10-16)
 
 Dropped the D dark/light hotkey from `@soleone/theme`. `ThemeProvider` no longer takes `hotkeyFallbacks`.
