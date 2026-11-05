@@ -16,7 +16,7 @@ const USAGE = `kit: start projects from current best practices
 
   kit new <name> [-t web]   scaffold ./<name> from a template (default: web)
   kit init [-t web]         scaffold the current empty directory, named after it
-  kit check                 vendored shadcn/@soleone files match upstream; no dead code (knip)
+  kit check                 vendored shadcn and registry (@soleone, @live) files match upstream; no dead code (knip)
   kit status                list projects under $SRC with their kit revision
   kit upgrade [--mark]      show kit changes since this project's revision; --mark records the latest
   kit adopt [-t web]        start tracking an existing project at revision r0 (before kit)
@@ -124,18 +124,21 @@ function checkDeadCode(root) {
 function checkVendored(root) {
   const kit = readKitFile(root);
   const uiDir = ["src/components/ui", "components/ui"].find((path) => existsSync(join(root, path)));
-  const soleoneDir = ["src/components/soleone", "components/soleone"].find((path) => existsSync(join(root, path)));
   const stock = uiDir ? readdirSync(join(root, uiDir)).filter((file) => /\.tsx?$/.test(file)).map((file) => file.replace(/\.tsx?$/, "")) : [];
-  const soleone = soleoneDir ? readdirSync(join(root, soleoneDir)).map((item) => `@soleone/${item}`) : [];
-  if (stock.length + soleone.length === 0) {
+  // Each registry in components.json vendors its items into components/<namespace>/<item>/.
+  const registryItems = registryNamespaces(root).flatMap((namespace) => {
+    const dir = [`src/components/${namespace}`, `components/${namespace}`].find((path) => existsSync(join(root, path)));
+    return dir ? readdirSync(join(root, dir)).map((item) => `@${namespace}/${item}`) : [];
+  });
+  if (stock.length + registryItems.length === 0) {
     console.log("No vendored components found.");
     return true;
   }
 
   // Registry items get one dry run each: listed together with others, shadcn sometimes compares a
   // file without its "use client" line and reports drift that isn't there.
-  console.log(`Comparing ${stock.length + soleone.length} items with upstream...`);
-  const batches = [...(stock.length ? [stock] : []), ...soleone.map((item) => [item])];
+  console.log(`Comparing ${stock.length + registryItems.length} items with upstream...`);
+  const batches = [...(stock.length ? [stock] : []), ...registryItems.map((item) => [item])];
   const output = batches.map((batch) => {
     const result = spawnSync("pnpm", [...SHADCN, "add", ...batch, "--dry-run"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     const text = `${result.stdout}${result.stderr}`.replace(/\x1b\[[0-9;]*m/g, "");
@@ -164,13 +167,20 @@ into a wrapper or tokens, or list the path under "allowDrift" in .kit.json. See 
   return false;
 }
 
+/** The registry namespaces in components.json, without the @: soleone, live. */
+function registryNamespaces(root) {
+  const file = join(root, "components.json");
+  if (!existsSync(file)) return [];
+  return Object.keys(JSON.parse(readFileSync(file, "utf8")).registries ?? {}).map((name) => name.replace(/^@/, ""));
+}
+
 /**
  * Whether a file the dry run reported really differs. shadcn's dry run sometimes compares a file
  * without its "use client" line, so the file's own diff must show more than that line.
  */
 function differsFromUpstream(root, path) {
-  const soleone = path.match(/components\/soleone\/([^/]+)\//);
-  const item = soleone ? `@soleone/${soleone[1]}` : path.split("/").pop().replace(/\.\w+$/, "");
+  const registry = registryNamespaces(root).map((namespace) => path.match(new RegExp(`components/(${namespace})/([^/]+)/`))).find(Boolean);
+  const item = registry ? `@${registry[1]}/${registry[2]}` : path.split("/").pop().replace(/\.\w+$/, "");
   const result = spawnSync("pnpm", [...SHADCN, "add", item, "--dry-run", "--diff", path], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
   const text = `${result.stdout}${result.stderr}`.replace(/\x1b\[[0-9;]*m/g, "");
   if (result.status !== 0) fail(`shadcn diff of ${path} failed:\n${text}`);

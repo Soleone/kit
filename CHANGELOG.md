@@ -4,6 +4,15 @@ Newest first. Each entry is written as steps an agent can apply to a project on 
 `kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
 Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
 
+## r5 (2026-11-05)
+
+Live pages (the hosted demos showcase grades S) get their look from [showcase-live-kit](https://github.com/Soleone/showcase-live-kit), a second registry, `@live`. `kit check` now checks every registry in `components.json`, so `src/components/live/` is vendored like `src/components/soleone/`.
+
+To apply to an existing project:
+
+1. Add `src/components/live/**` next to `src/components/soleone/**` in the `vendored` list of `vite.config.ts`, the `ignore` list of `knip.json` and `.gitattributes`.
+2. Only for a project with a live page: add `"@live": "https://raw.githubusercontent.com/Soleone/showcase-live-kit/main/public/r/{name}.json"` to `registries` in `components.json` and follow the kit's README.
+
 ## r4 (2026-10-19)
 
 Variant wrappers no longer default to `cva`. A plain class map plus `cn()` covers a wrapper with one state or one small set of kinds; `cva` is for several variant axes, compound variants, or classes exported for use without the component. The lint rules are unchanged: `cva` stays allowed only in `components/variants/`.
