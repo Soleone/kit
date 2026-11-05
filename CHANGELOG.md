@@ -4,6 +4,15 @@ Newest first. Each entry is written as steps an agent can apply to a project on 
 `kit upgrade` prints the entries a project hasn't applied yet; `kit upgrade --mark` records the latest.
 Projects adopted with `kit adopt` start at r0 (before kit), so r1 reads as the full checklist.
 
+## r6 (2026-11-05)
+
+Releases ask which part of the version to bump. Without `ignoreRecommendedBump`, `@release-it/conventional-changelog` picks the bump from the commits since the last tag (any `feat:` means minor) and releases without asking. With it, release-it asks for patch, minor or major, and the changelog is still written from the commits. Applies to any project that releases with release-it, whatever its template.
+
+To apply to an existing project:
+
+1. In `.release-it.json` (or the `release-it` key of `package.json`), add `"ignoreRecommendedBump": true` to the `@release-it/conventional-changelog` plugin options.
+2. Keep the rest of the shape the projects share: `git.requireBranch: "main"`, `git.tagName: "v${version}"`, and the plugin with `preset: { "name": "conventionalcommits" }` and `infile: "CHANGELOG.md"`.
+
 ## r5 (2026-11-05)
 
 Live pages (the hosted demos showcase grades S) get their look from [showcase-live-kit](https://github.com/Soleone/showcase-live-kit), a second registry, `@live`. `kit check` now checks every registry in `components.json`, so `src/components/live/` is vendored like `src/components/soleone/`.
