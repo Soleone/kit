@@ -5,6 +5,7 @@ practices each project is on. `bin/kit.mjs` is linked as `kit` from `~/.local/bi
 
 ```sh
 kit new my-app        # scaffold ./my-app (template: web)
+kit init              # scaffold the current empty directory, named after it
 kit check             # vendored shadcn/@soleone files still match upstream?
 kit status            # every project under $SRC with a .kit.json, and how far behind it is
 kit upgrade           # print the CHANGELOG steps this project hasn't applied; --mark when done

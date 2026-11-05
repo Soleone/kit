@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const KIT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -15,6 +15,7 @@ const SHADCN = ["dlx", "shadcn@latest"];
 const USAGE = `kit: start projects from current best practices
 
   kit new <name> [-t web]   scaffold ./<name> from a template (default: web)
+  kit init [-t web]         scaffold the current empty directory, named after it
   kit check                 vendored shadcn/@soleone files match upstream; no dead code (knip)
   kit status                list projects under $SRC with their kit revision
   kit upgrade [--mark]      show kit changes since this project's revision; --mark records the latest
@@ -23,7 +24,7 @@ const USAGE = `kit: start projects from current best practices
 templates: ${listTemplates().join(", ")}    latest revision: ${latestRevision()}`;
 
 const [command, ...args] = process.argv.slice(2);
-const commands = { new: create, check, status, upgrade, adopt };
+const commands = { new: create, init, check, status, upgrade, adopt };
 if (!commands[command]) {
   console.log(USAGE);
   process.exit(command && command !== "help" ? 1 : 0);
@@ -36,14 +37,27 @@ async function create(args) {
   const name = args.find((arg) => !arg.startsWith("-") && args[args.indexOf(arg) - 1] !== "-t");
   const template = option(args, "-t") ?? "web";
   if (!name) fail("usage: kit new <name> [-t web]");
-  if (!listTemplates().includes(template)) fail(`unknown template "${template}"`);
   const dir = resolve(name);
   if (existsSync(dir)) fail(`${dir} already exists`);
+  scaffold({ dir, name, template, target: name, createIn: dirname(dir) });
+  console.log(`\nDone: ${relative(process.cwd(), dir)}\n  cd ${name} && vp dev`);
+}
+
+async function init(args) {
+  const dir = resolve(".");
+  if (readdirSync(dir).length > 0) fail(`${dir} is not empty`);
+  scaffold({ dir, name: basename(dir), template: option(args, "-t") ?? "web", target: ".", createIn: dir });
+  console.log("\nDone. vp dev");
+}
+
+/** Runs the upstream generators into dir, then lays the template on top and commits. */
+function scaffold({ dir, name, template, target, createIn }) {
+  if (!listTemplates().includes(template)) fail(`unknown template "${template}"`);
   requireCommand("vp", "Vite+ is not on PATH. Install it from https://viteplus.dev or source ~/.config/vite-plus/env.");
 
   step("Scaffolding React + TypeScript with Vite+");
   run("vp", ["create", "vite", "--no-interactive", "--no-git", "--no-hooks", "--no-editor", "--agent", "agents",
-    "--package-manager", "pnpm", "--", name, "--template", "react-ts"], dirname(dir));
+    "--package-manager", "pnpm", "--", target, "--template", "react-ts"], createIn);
   for (const demo of ["src/App.css", "src/assets", "public/icons.svg"]) rmSync(join(dir, demo), { recursive: true, force: true });
 
   step("Tailwind and the @ alias");
@@ -89,8 +103,6 @@ async function create(args) {
   run("git", ["init", "-q", "-b", "main"], dir);
   run("git", ["add", "-A"], dir);
   run("git", ["commit", "-q", "-m", `chore: scaffold from kit ${template} ${latestRevision()}`], dir);
-
-  console.log(`\nDone: ${relative(process.cwd(), dir) || "."}\n  cd ${name} && vp dev`);
 }
 
 async function check() {
