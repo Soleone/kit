@@ -1,0 +1,1 @@
+{"id":"docs-drift/.","play":"docs-drift","path":".","commit":"38694c5aad03c392a4804b0efc6b2878d7043e24","decision":"keep","reason":"README kit check line and template AGENTS.md vendored list predated r5/knip; fixed in PR 1","source":"agent","date":"2026-11-17T08:30:14.063Z"}
