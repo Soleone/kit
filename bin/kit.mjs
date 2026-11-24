@@ -29,11 +29,11 @@ if (!commands[command]) {
   console.log(USAGE);
   process.exit(command && command !== "help" ? 1 : 0);
 }
-await commands[command](args);
+commands[command](args);
 
 // --- commands
 
-async function create(args) {
+function create(args) {
   const name = args.find((arg) => !arg.startsWith("-") && args[args.indexOf(arg) - 1] !== "-t");
   const template = option(args, "-t") ?? "web";
   if (!name) fail("usage: kit new <name> [-t web]");
@@ -43,7 +43,7 @@ async function create(args) {
   console.log(`\nDone: ${relative(process.cwd(), dir)}\n  cd ${name} && vp dev`);
 }
 
-async function init(args) {
+function init(args) {
   const dir = resolve(".");
   if (readdirSync(dir).length > 0) fail(`${dir} is not empty`);
   scaffold({ dir, name: basename(dir), template: option(args, "-t") ?? "web", target: ".", createIn: dir });
@@ -105,7 +105,7 @@ function scaffold({ dir, name, template, target, createIn }) {
   run("git", ["commit", "-q", "-m", `chore: scaffold from kit ${template} ${latestRevision()}`], dir);
 }
 
-async function check() {
+function check() {
   const root = projectRoot();
   const vendoredOk = checkVendored(root);
   const deadCodeOk = checkDeadCode(root);
@@ -189,7 +189,7 @@ function differsFromUpstream(root, path) {
   return changed.some((line) => !/^[-+]\s*("use client"\s*)?$/.test(line));
 }
 
-async function status() {
+function status() {
   const src = process.env.SRC ?? join(homedir(), "src");
   const latest = latestRevision();
   const projects = findKitFiles(src, 4);
@@ -201,7 +201,7 @@ async function status() {
   }
 }
 
-async function upgrade(args) {
+function upgrade(args) {
   const root = projectRoot();
   const kit = readKitFile(root) ?? fail("No .kit.json here. Use kit adopt first.");
   const latest = latestRevision();
@@ -215,7 +215,7 @@ async function upgrade(args) {
   for (const entry of entries.reverse()) console.log(entry.text);
 }
 
-async function adopt(args) {
+function adopt(args) {
   const root = resolve(".");
   const template = option(args, "-t") ?? "web";
   if (existsSync(join(root, ".kit.json"))) fail(".kit.json already exists");
